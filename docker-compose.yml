@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL Database ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: hrms_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hrms_db
+      POSTGRES_USER: hrms_user
+      POSTGRES_PASSWORD: hrms_pass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hrms_user -d hrms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hrms_network
+
+  # ─── Backend API ────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: hrms_backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: hrms_db
+      DB_USER: hrms_user
+      DB_PASSWORD: hrms_pass123
+      DB_SSL: "false"
+      JWT_SECRET: hrms_super_secret_jwt_key_2025_mini_ai
+      JWT_EXPIRES_IN: 24h
+      CORS_ORIGIN: "*"
+      POLYGON_RPC_URL: https://rpc-amoy.polygon.technology/
+      POLYGON_CHAIN_ID: 80002
+      CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hrms_network
+
+  # ─── Frontend (Development) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: hrms_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - hrms_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  hrms_network:
+    driver: bridge
