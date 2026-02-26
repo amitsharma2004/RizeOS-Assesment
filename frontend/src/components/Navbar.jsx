@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 
 const Navbar = () => {
   const { user, isAdmin, logoutUser } = useAuth();
+  const { theme, toggleTheme, toggleSidebar, sidebarCollapsed } = useUI();
   const navigate = useNavigate();
-  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -13,78 +14,62 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const navLinks = isAdmin
-    ? [
-        { to: '/admin', label: 'Dashboard' },
-        { to: '/admin/employees', label: 'Employees' },
-        { to: '/admin/tasks', label: 'Tasks' },
-        { to: '/admin/requests', label: 'Requests' },
-        { to: '/admin/ai-insights', label: 'AI Insights' },
-      ]
-    : [
-        { to: '/employee', label: 'Dashboard' },
-        { to: '/employee/tasks', label: 'My Tasks' },
-      ];
-
-  const isActive = (path) => location.pathname === path;
-
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="navbar-glass sticky top-0 z-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link to={isAdmin ? '/admin' : '/employee'} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center brand-badge">
                 <span className="text-white font-bold text-sm">HR</span>
               </div>
-              <span className="font-bold text-gray-900 text-lg hidden sm:block">Mini AI-HRMS</span>
+              <span className="font-bold text-lg hidden sm:block">Mini AI-HRMS</span>
             </Link>
           </div>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive(link.to)
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
           {/* User Menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={toggleSidebar}
+              className="toggle-chip hidden md:inline-flex"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {sidebarCollapsed ? '➡️' : '⬅️'}
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="toggle-chip"
+              title="Toggle theme"
+            >
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </button>
+
             {user && (
               <>
                 <div className="hidden sm:flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-700 font-semibold text-sm">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/40 border border-white/40">
+                    <span className="font-semibold text-sm">
                       {user.name?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="hidden lg:block">
-                    <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs opacity-70 capitalize">{user.role}</p>
                   </div>
                 </div>
 
                 {/* Org code badge for admin */}
                 {isAdmin && user.org_code && (
-                  <span className="hidden sm:inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-mono font-bold border border-blue-200">
+                  <span className="hidden sm:inline-flex items-center px-2 py-1 rounded-md text-xs font-mono font-bold border border-white/50 bg-white/30">
                     {user.org_code}
                   </span>
                 )}
 
                 <button
                   onClick={handleLogout}
-                  className="text-sm text-gray-600 hover:text-red-600 px-3 py-2 rounded-md hover:bg-red-50 transition-colors"
+                  className="text-sm px-3 py-2 rounded-md hover:bg-red-500/10 hover:text-red-500 transition-colors whitespace-nowrap"
                 >
                   Logout
                 </button>
@@ -94,7 +79,7 @@ const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100"
+              className="md:hidden p-2 rounded-md hover:bg-white/30"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {menuOpen ? (
@@ -107,23 +92,15 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Controls */}
         {menuOpen && (
-          <div className="md:hidden py-2 border-t border-gray-100">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMenuOpen(false)}
-                className={`block px-3 py-2 text-sm font-medium rounded-md mx-1 mb-1 ${
-                  isActive(link.to)
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="md:hidden py-2 border-t border-white/30">
+            <button onClick={toggleSidebar} className="toggle-chip w-full justify-center mb-2">
+              {sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            </button>
+            <button onClick={toggleTheme} className="toggle-chip w-full justify-center">
+              {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            </button>
           </div>
         )}
       </div>

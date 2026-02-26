@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getEmployees, updateEmployee, deactivateEmployee, getAiScore } from '../services/api';
+import PageShell from '../components/layout/PageShell';
+import PageHeader from '../components/layout/PageHeader';
+import LoadingState from '../components/ui/LoadingState';
+import EmptyState from '../components/ui/EmptyState';
 
 const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
@@ -79,36 +83,31 @@ const EmployeesPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
-          <p className="text-gray-500 text-sm mt-1">{employees.length} employees in your organization</p>
-        </div>
-        <input
-          type="text"
-          className="input-field max-w-xs"
-          placeholder="Search by name, email, department..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Employees"
+        subtitle={`${employees.length} employees in your organization`}
+        actions={
+          <input
+            type="text"
+            className="input-field w-full sm:w-80"
+            placeholder="Search by name, email, department..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        }
+      />
 
       {message && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div className="status-banner status-banner--success">
           {message}
         </div>
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <LoadingState minHeight="min-h-48" />
       ) : filtered.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-4xl mb-3">👥</p>
-          <p className="text-gray-500">No employees found</p>
-        </div>
+        <EmptyState icon="👥" title="No employees found" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((emp) => (
@@ -118,7 +117,7 @@ const EmployeesPage = () => {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="avatar-md bg-blue-100">
                     <span className="text-blue-700 font-bold">
                       {emp.name?.charAt(0).toUpperCase()}
                     </span>
@@ -213,9 +212,9 @@ const EmployeesPage = () => {
 
       {/* Edit Modal */}
       {editModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="p-6">
+        <div className="modal-overlay">
+          <div className="modal-panel max-w-md">
+            <div className="modal-body">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Edit {editModal.name}</h3>
               <form onSubmit={handleUpdate} className="space-y-4">
                 <div>
@@ -248,7 +247,7 @@ const EmployeesPage = () => {
                     onChange={(e) => setEditModal({ ...editModal, skills: e.target.value })}
                   />
                 </div>
-                <div className="flex gap-3 pt-2">
+                <div className="modal-actions">
                   <button type="submit" className="btn-primary flex-1">Save Changes</button>
                   <button
                     type="button"
@@ -263,7 +262,7 @@ const EmployeesPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };
 

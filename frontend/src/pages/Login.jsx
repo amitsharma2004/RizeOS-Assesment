@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { loginUser } = useAuth();
+  const { theme, toggleTheme } = useUI();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,15 +28,22 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="auth-shell">
+      <div className="auth-container">
+        <div className="flex justify-end mb-3">
+          <button onClick={toggleTheme} className="toggle-chip" type="button">
+            {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+          </button>
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="auth-brand">
+          <div className="auth-logo">
             <span className="text-white font-bold text-2xl">HR</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Mini AI-HRMS</h1>
           <p className="text-gray-500 mt-1">Sign in to your account</p>
+          <p className="text-xs text-gray-500 mt-2">Secure access to dashboard, tasks and AI insights</p>
         </div>
 
         {/* Card */}
@@ -85,13 +94,13 @@ const Login = () => {
           <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
             <Link
               to="/register-admin"
-              className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium p-2 rounded-lg hover:bg-blue-50"
             >
               Create Organization (Admin)
             </Link>
             <Link
               to="/join-org"
-              className="block text-center text-sm text-gray-600 hover:text-gray-800"
+              className="block text-center text-sm text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-50"
             >
               Join an Organization (Employee)
             </Link>

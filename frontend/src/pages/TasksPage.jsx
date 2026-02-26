@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask, getEmployees, getTaskSuggestions } from '../services/api';
 import { getUserBlockchainActivity, getOrgBlockchainLogs } from '../services/web3Service';
 import { useAuth } from '../context/AuthContext';
+import PageShell from '../components/layout/PageShell';
+import PageHeader from '../components/layout/PageHeader';
+import LoadingState from '../components/ui/LoadingState';
+import EmptyState from '../components/ui/EmptyState';
 
 const priorityColor = (p) => {
   if (p === 'high') return 'bg-red-100 text-red-700';
@@ -130,49 +134,44 @@ const TasksPage = () => {
     task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isAdmin ? 'Task Management' : 'My Tasks'}</h1>
-          <p className="text-gray-500 text-sm mt-1">{tasks.length} tasks</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            className="input-field w-auto"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="assigned">Assigned</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
-          {isAdmin && (
-            <button
-              onClick={() => { setShowCreate(true); fetchSuggestions(); }}
-              className="btn-primary whitespace-nowrap"
+    <PageShell>
+      <PageHeader
+        title={isAdmin ? 'Task Management' : 'My Tasks'}
+        subtitle={`${tasks.length} tasks`}
+        actions={
+          <>
+            <select
+              className="input-field w-full sm:w-auto"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
             >
-              + New Task
-            </button>
-          )}
-        </div>
-      </div>
+              <option value="">All Status</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            {isAdmin && (
+              <button
+                onClick={() => { setShowCreate(true); fetchSuggestions(); }}
+                className="btn-primary whitespace-nowrap"
+              >
+                + New Task
+              </button>
+            )}
+          </>
+        }
+      />
 
       {message && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+        <div className="status-banner status-banner--info">
           {message}
         </div>
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <LoadingState minHeight="min-h-48" />
       ) : tasks.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-4xl mb-3">📋</p>
-          <p className="text-gray-500">No tasks found</p>
-        </div>
+        <EmptyState icon="📋" title="No tasks found" />
       ) : (
         <div className="space-y-3">
           {tasks.map((task) => (
@@ -224,11 +223,11 @@ const TasksPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center justify-end gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto flex-shrink-0">
                   {/* Status update dropdown */}
                   {task.status !== 'completed' && (
                     <select
-                      className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="row-action-btn border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-auto"
                       value={task.status}
                       onChange={(e) => handleStatusUpdate(task.id, e.target.value)}
                     >
@@ -240,7 +239,7 @@ const TasksPage = () => {
                   {task.status === 'completed' && (
                     <button
                       onClick={() => handleStatusUpdate(task.id, 'in_progress')}
-                      className="text-xs text-gray-500 hover:text-blue-600 border border-gray-300 rounded-lg px-2 py-1.5"
+                      className="row-action-btn text-gray-500 hover:text-blue-600 border border-gray-300 w-full sm:w-auto"
                     >
                       Reopen
                     </button>
@@ -248,7 +247,7 @@ const TasksPage = () => {
                   {isAdmin && (
                     <button
                       onClick={() => handleDelete(task.id, task.title)}
-                      className="text-xs text-red-500 hover:text-red-700 border border-red-200 rounded-lg px-2 py-1.5 hover:bg-red-50"
+                      className="row-action-btn text-red-500 hover:text-red-700 border border-red-200 hover:bg-red-50 w-full sm:w-auto"
                     >
                       🗑️
                     </button>
@@ -262,9 +261,9 @@ const TasksPage = () => {
 
       {/* Create Task Modal */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+        <div className="modal-overlay">
+          <div className="modal-panel max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="modal-body">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Create New Task</h3>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
@@ -359,7 +358,7 @@ const TasksPage = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <div className="modal-actions">
                   <button type="submit" className="btn-primary flex-1">Create Task</button>
                   <button
                     type="button"
@@ -374,7 +373,7 @@ const TasksPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };
 

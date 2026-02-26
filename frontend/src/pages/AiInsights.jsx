@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getAiInsights, getProductivityRankings, recalculateAllScores } from '../services/api';
+import PageShell from '../components/layout/PageShell';
+import PageHeader from '../components/layout/PageHeader';
+import LoadingState from '../components/ui/LoadingState';
 
 const ScoreBar = ({ score }) => (
   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -50,45 +53,41 @@ const AiInsights = () => {
   const trendIcon = (t) => t === 'improving' ? '📈' : t === 'declining' ? '📉' : '➡️';
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">🤖 AI Insights</h1>
-          <p className="text-gray-500 text-sm mt-1">Rule-based workforce intelligence</p>
-        </div>
-        <button
-          onClick={handleRecalc}
-          disabled={recalcLoading}
-          className="btn-primary flex items-center gap-2"
-        >
-          {recalcLoading ? (
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : '🔄'}
-          Recalculate All
-        </button>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="🤖 AI Insights"
+        subtitle="Rule-based workforce intelligence"
+        actions={
+          <button
+            onClick={handleRecalc}
+            disabled={recalcLoading}
+            className="btn-primary flex items-center gap-2"
+          >
+            {recalcLoading ? (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : '🔄'}
+            Recalculate All
+          </button>
+        }
+      />
 
       {message && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div className="status-banner status-banner--success">
           {message}
         </div>
       )}
 
       {insights && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="content-grid-2 mb-8">
           {/* Top Performers */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">🏆 Top Performers</h2>
+            <h2 className="section-title">🏆 Top Performers</h2>
             {insights.topPerformers.length === 0 ? (
-              <p className="text-gray-500 text-sm">No data yet</p>
+              <p className="helper-text">No data yet</p>
             ) : (
               <div className="space-y-3">
                 {insights.topPerformers.map((emp, i) => (
@@ -115,9 +114,9 @@ const AiInsights = () => {
 
           {/* Needs Attention */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">⚠️ Needs Attention</h2>
+            <h2 className="section-title">⚠️ Needs Attention</h2>
             {insights.needsAttention.length === 0 ? (
-              <p className="text-gray-500 text-sm">All employees performing well!</p>
+              <p className="helper-text">All employees performing well!</p>
             ) : (
               <div className="space-y-3">
                 {insights.needsAttention.map((emp, i) => (
@@ -145,7 +144,7 @@ const AiInsights = () => {
       {/* Trend Distribution */}
       {insights?.trendDistribution?.length > 0 && (
         <div className="card mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">📊 Performance Trends</h2>
+          <h2 className="section-title">📊 Performance Trends</h2>
           <div className="flex gap-6 flex-wrap">
             {insights.trendDistribution.map((t) => (
               <div key={t.performance_trend} className="flex items-center gap-2">
@@ -164,38 +163,38 @@ const AiInsights = () => {
 
       {/* Full Rankings */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">📋 Full Productivity Rankings</h2>
+        <h2 className="section-title">📋 Full Productivity Rankings</h2>
         {rankings.length === 0 ? (
-          <p className="text-gray-500 text-sm">No employee data yet. Approve employees and assign tasks to generate scores.</p>
+          <p className="helper-text">No employee data yet. Approve employees and assign tasks to generate scores.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="table-wrap">
+            <table className="table-base min-w-[760px]">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">#</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Employee</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium hidden sm:table-cell">Dept</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Score</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium hidden md:table-cell">Completion</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium hidden md:table-cell">On-time</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Trend</th>
+                <tr>
+                  <th className="w-12">#</th>
+                  <th>Employee</th>
+                  <th className="hidden sm:table-cell">Dept</th>
+                  <th className="text-right">Score</th>
+                  <th className="hidden md:table-cell text-right">Completion</th>
+                  <th className="hidden md:table-cell text-right">On-time</th>
+                  <th className="text-center w-16">Trend</th>
                 </tr>
               </thead>
               <tbody>
                 {rankings.map((emp, i) => (
-                  <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="py-3 px-2 text-gray-400">{i + 1}</td>
-                    <td className="py-3 px-2">
+                  <tr key={emp.id} className="hover:bg-gray-50">
+                    <td className="text-gray-400">{i + 1}</td>
+                    <td>
                       <div>
                         <p className="font-medium text-gray-900">{emp.name}</p>
                         {emp.position && <p className="text-xs text-gray-400">{emp.position}</p>}
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-gray-500 hidden sm:table-cell">
+                    <td className="text-gray-500 hidden sm:table-cell">
                       {emp.department || '-'}
                     </td>
-                    <td className="py-3 px-2">
-                      <div className="flex items-center gap-2">
+                    <td>
+                      <div className="flex items-center justify-end gap-2">
                         <span className={`font-bold ${
                           emp.productivity_score >= 70 ? 'text-green-600' :
                           emp.productivity_score >= 40 ? 'text-yellow-600' : 'text-red-600'
@@ -207,13 +206,13 @@ const AiInsights = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-gray-500 hidden md:table-cell">
+                    <td className="text-gray-500 hidden md:table-cell text-right">
                       {emp.task_completion_rate}%
                     </td>
-                    <td className="py-3 px-2 text-gray-500 hidden md:table-cell">
+                    <td className="text-gray-500 hidden md:table-cell text-right">
                       {emp.on_time_rate}%
                     </td>
-                    <td className="py-3 px-2">{trendIcon(emp.performance_trend)}</td>
+                    <td className="text-center">{trendIcon(emp.performance_trend)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -221,7 +220,7 @@ const AiInsights = () => {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 };
 

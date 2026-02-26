@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerAdmin } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useUI } from '../context/UIContext';
 
 const RegisterAdmin = () => {
   const [form, setForm] = useState({
@@ -15,6 +16,7 @@ const RegisterAdmin = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const { loginUser } = useAuth();
+  const { theme, toggleTheme } = useUI();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -35,14 +37,14 @@ const RegisterAdmin = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="auth-shell">
         <div className="card max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Organization Created!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-2">Organization Created!</h2>
           <p className="text-gray-600 mb-4">Share this code with your employees:</p>
           <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-4">
             <p className="text-sm text-blue-600 font-medium mb-2">Organization Code</p>
@@ -50,21 +52,28 @@ const RegisterAdmin = () => {
               {success.org_code}
             </p>
           </div>
-          <p className="text-sm text-gray-500">Redirecting to dashboard...</p>
+          <p className="helper-text">Redirecting to dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+    <div className="auth-shell">
+      <div className="auth-container">
+        <div className="flex justify-end mb-3">
+          <button onClick={toggleTheme} className="toggle-chip" type="button">
+            {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+          </button>
+        </div>
+
+        <div className="auth-brand">
+          <div className="auth-logo">
             <span className="text-white font-bold text-2xl">HR</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Create Organization</h1>
           <p className="text-gray-500 mt-1">Set up your company workspace</p>
+          <p className="text-xs text-gray-500 mt-2">You’ll receive a 6-letter org code for employee onboarding</p>
         </div>
 
         <div className="card">

@@ -1,8 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UIProvider } from './context/UIContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 
 // Pages
 import Login from './pages/Login';
@@ -18,10 +20,22 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 // Layout wrapper that includes the navbar
 const AppLayout = ({ children }) => {
   const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <div className="app-shell">
+        <main>{children}</main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {user && <Navbar />}
-      <main>{children}</main>
+    <div className="app-shell">
+      <Navbar />
+      <div className="dashboard-shell">
+        <Sidebar />
+        <main className="dashboard-main">{children}</main>
+      </div>
     </div>
   );
 };
@@ -36,9 +50,10 @@ const RootRedirect = () => {
 
 const App = () => (
   <BrowserRouter>
-    <AuthProvider>
-      <AppLayout>
-        <Routes>
+    <UIProvider>
+      <AuthProvider>
+        <AppLayout>
+          <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register-admin" element={<RegisterAdmin />} />
@@ -109,9 +124,10 @@ const App = () => (
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AppLayout>
-    </AuthProvider>
+          </Routes>
+        </AppLayout>
+      </AuthProvider>
+    </UIProvider>
   </BrowserRouter>
 );
 

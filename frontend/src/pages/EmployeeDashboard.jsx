@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getMyStats, getAiScore } from '../services/api';
 import { getUserBlockchainActivity } from '../services/web3Service';
 import { useAuth } from '../context/AuthContext';
 import WalletConnect from '../components/WalletConnect';
+import PageShell from '../components/layout/PageShell';
+import PageHeader from '../components/layout/PageHeader';
+import LoadingState from '../components/ui/LoadingState';
 
 const EmployeeDashboard = () => {
   const { user } = useAuth();
@@ -21,11 +25,27 @@ const EmployeeDashboard = () => {
 
   // Fetch blockchain activity
   useEffect(() => {
-    if (user?.id) {
-      getUserBlockchainActivity(user.id)
-        .then((r) => setChainLogs(r.data.dbLogs || []))
-        .catch(() => {});
-    }
+    if (!user?.id) return undefined;
+
+    let isMounted = true;
+
+    const fetchChainLogs = async () => {
+      try {
+        const r = await getUserBlockchainActivity(user.id);
+        if (isMounted) {
+          setChainLogs(r.data.dbLogs || []);
+        }
+      } catch {
+      }
+    };
+
+    fetchChainLogs();
+    const intervalId = setInterval(fetchChainLogs, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [user?.id]);
 
   const handleFetchScore = async () => {
@@ -50,43 +70,40 @@ const EmployeeDashboard = () => {
     t.due_date && t.status !== 'completed' && new Date(t.due_date) < new Date();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Hello, {user?.name?.split(' ')[0]}! 👋</h1>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <p className="text-gray-500 text-sm">{user?.org_name}</p>
-          {user?.department && (
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-              {user.department}
-            </span>
-          )}
-          {user?.position && (
-            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-              {user.position}
-            </span>
-          )}
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        title={`Hello, ${user?.name?.split(' ')[0]}! 👋`}
+        subtitle={user?.org_name}
+        actions={
+          <>
+            {user?.department && (
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                {user.department}
+              </span>
+            )}
+            {user?.position && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                {user.position}
+              </span>
+            )}
+          </>
+        }
+      />
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="stats-grid mb-8">
           {[
             { label: 'Total Tasks', value: stats.tasks.total, color: 'text-gray-900', icon: '📋' },
             { label: 'In Progress', value: stats.tasks.inProgress, color: 'text-blue-600', icon: '🔄' },
             { label: 'Completed', value: stats.tasks.completed, color: 'text-green-600', icon: '✅' },
             { label: 'Overdue', value: stats.tasks.overdue, color: 'text-red-600', icon: '⚠️' },
           ].map((s) => (
-            <div key={s.label} className="card text-center">
+            <div key={s.label} className="card-compact text-center h-full">
               <p className="text-2xl mb-1">{s.icon}</p>
               <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
               <p className="text-xs text-gray-500 mt-1">{s.label}</p>
@@ -95,12 +112,12 @@ const EmployeeDashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="content-grid-3">
         {/* Left: AI Score + Wallet */}
         <div className="space-y-4">
           {/* AI Score */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">🤖 My AI Score</h2>
+            <h2 className="section-title">🤖 My AI Score</h2>
             {score ? (
               <div>
                 <div className="text-center mb-4">
@@ -108,7 +125,7 @@ const EmployeeDashboard = () => {
                     score.score >= 70 ? 'text-green-600' :
                     score.score >= 40 ? 'text-yellow-600' : 'text-red-600'
                   }`}>{score.score}</div>
-                  <p className="text-gray-500 text-sm">out of 100</p>
+                  <p className="helper-text">out of 100</p>
                   <p className="text-lg mt-1">
                     {score.trend === 'improving' ? '📈 Improving' :
                      score.trend === 'declining' ? '📉 Declining' : '➡️ Stable'}
@@ -140,7 +157,7 @@ const EmployeeDashboard = () => {
               </div>
             ) : (
               <div className="text-center">
-                <p className="text-gray-400 text-sm mb-4">Click to calculate your score</p>
+                <p className="helper-text mb-4">Click to calculate your score</p>
                 <button
                   onClick={handleFetchScore}
                   disabled={scoreLoading}
@@ -200,15 +217,15 @@ const EmployeeDashboard = () => {
         <div className="card lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">My Tasks</h2>
-            <a href="/employee/tasks" className="text-sm text-blue-600 hover:text-blue-800">
+            <Link to="/employee/tasks" className="text-sm text-blue-600 hover:text-blue-800">
               View all →
-            </a>
+            </Link>
           </div>
 
           {!stats?.recentTasks?.length ? (
             <div className="text-center py-8">
               <p className="text-3xl mb-2">📭</p>
-              <p className="text-gray-500 text-sm">No tasks assigned yet</p>
+              <p className="helper-text">No tasks assigned yet</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -257,7 +274,7 @@ const EmployeeDashboard = () => {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 
